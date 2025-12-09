@@ -13,7 +13,7 @@
     
     <style>
         /* =========================================
-           1. VARIABLES & RESET (PREMIUM UPGRADE)
+           1. VARIABLES & RESET (ULTRA-FLUID PHYSICS)
            ========================================= */
         :root {
             --bg-color: #f8f6ff;
@@ -28,15 +28,22 @@
             --font-hand: 'Parisienne', cursive;
             --danger: #ff7675;
             
-            /* --- SMOOTH ANIMATION VARIABLES --- */
-            --ease-elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6); 
-            --ease-lux: cubic-bezier(0.23, 1, 0.32, 1);
-            --ease-float: ease-in-out;
+            /* --- UPDATED PHYSICS FOR MAXIMUM SMOOTHNESS --- */
+            /* "Quintic Out" - The gold standard for premium, silky UI movement */
+            --ease-lux: cubic-bezier(0.23, 1, 0.32, 1); 
+            /* "Elastic Out" - Adjusted to be less bouncy, more responsive */
+            --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1); 
+            /* "Sine In-Out" - For soft floating elements */
+            --ease-float: cubic-bezier(0.45, 0.05, 0.55, 0.95);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        html, body { width: 100%; height: 100%; overflow: hidden; }
+        html, body { 
+            width: 100%; height: 100%; overflow: hidden; 
+            /* Prevent rubber-banding on mobile for a native app feel */
+            overscroll-behavior: none; 
+        }
 
         body {
             background-color: var(--bg-color);
@@ -44,10 +51,49 @@
             color: var(--text-dark);
             height: 100vh; width: 100vw;
             cursor: default; position: relative;
+            -webkit-font-smoothing: antialiased; /* Crisp text */
+            -moz-osx-font-smoothing: grayscale;
         }
 
         /* =========================================
-           2. AMBIENT BACKGROUND
+           2. FIREFLIES
+           ========================================= */
+        .firefly {
+            position: fixed; left: 50%; top: 50%; width: 4px; height: 4px;
+            background-color: #fff; border-radius: 50%;
+            box-shadow: 0 0 10px #fff, 0 0 20px #e0c3fc;
+            animation: fly 15s linear infinite; pointer-events: none; z-index: 0;
+            opacity: 0;
+            will-change: transform, opacity; /* GPU Optimization */
+        }
+        @keyframes fly {
+            0% { transform: translate(0, 0) scale(1); opacity: 0; }
+            10% { opacity: 0.8; }
+            50% { opacity: 0.5; }
+            90% { opacity: 0.8; }
+            100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
+        }
+
+        /* =========================================
+           3. FINALE PARTICLES
+           ========================================= */
+        .finale-particle {
+            position: absolute;
+            background: radial-gradient(circle, var(--lilac-deep) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            animation: floatUpParticle 4s ease-in infinite;
+            will-change: transform, opacity;
+        }
+        @keyframes floatUpParticle {
+            0% { transform: translateY(0) scale(0); opacity: 0; }
+            20% { opacity: 0.6; }
+            100% { transform: translateY(-100vh) scale(1); opacity: 0; }
+        }
+
+        /* =========================================
+           4. AMBIENT BACKGROUND
            ========================================= */
         .ambient-background {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
@@ -58,6 +104,7 @@
             position: absolute; border-radius: 50%; filter: blur(90px); 
             opacity: 0.6; 
             animation: floatOrb 15s infinite alternate ease-in-out;
+            will-change: transform;
         }
         .orb-1 { width: 80vw; height: 80vw; background: #ffe9f9; top: -20%; left: -20%; }
         .orb-2 { width: 60vw; height: 60vw; background: #e0c3fc; bottom: -10%; right: -10%; animation-delay: -7s; }
@@ -69,26 +116,34 @@
         }
 
         /* =========================================
-           3. UI ELEMENTS
+           5. UI ELEMENTS
            ========================================= */
         .cursor-trail {
             width: 25px; height: 25px; background: rgba(142, 68, 173, 0.15);
             border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999;
-            transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), left 0.1s linear, top 0.1s linear; 
+            /* Smoother lag for the cursor trail */
+            transition: transform 0.15s cubic-bezier(0.2, 0, 0.2, 1), left 0.1s linear, top 0.1s linear; 
             backdrop-filter: blur(4px);
             box-shadow: 0 0 20px rgba(142, 68, 173, 0.3);
             border: 1px solid rgba(255,255,255,0.4);
+            will-change: left, top, transform;
         }
         @media (hover: none) and (pointer: coarse) { .cursor-trail { display: none; } }
 
-        button, .gallery-item, .close-modal, .box { cursor: pointer !important; -webkit-tap-highlight-color: transparent; }
+        /* Remove highlighting on tap */
+        button, .gallery-item, .close-modal, .box { 
+            cursor: pointer !important; 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none;
+        }
 
         /* =========================================
-           4. SCENES (LAYOUT)
+           6. SCENES (LAYOUT)
            ========================================= */
         .scene {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             opacity: 0; 
+            /* Ultra-smooth scene transition */
             transition: opacity 1.2s var(--ease-lux), transform 1.2s var(--ease-lux);
             transform: scale(0.98) translateY(20px);
             filter: blur(10px);
@@ -97,6 +152,7 @@
             display: flex; flex-direction: column; 
             align-items: center; justify-content: center;
             padding: 20px; 
+            will-change: opacity, transform, filter;
         }
         .scene.active { 
             opacity: 1; 
@@ -108,7 +164,7 @@
 
         @keyframes softFloat {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+            50% { transform: translateY(-10px); }
         }
 
         /* LANDING */
@@ -117,51 +173,49 @@
             font-family: var(--font-hand); font-size: clamp(2.8rem, 8vw, 4.5rem);
             color: var(--lilac-deep); margin-bottom: 15px; line-height: 1.2;
             text-shadow: 2px 2px 0px rgba(255,255,255,0.5);
-            animation: popIn 1s var(--ease-elastic) backwards, softFloat 4s ease-in-out infinite 1s;
+            animation: popIn 1.4s var(--ease-elastic) backwards, softFloat 5s ease-in-out infinite 1.2s;
         }
         .landing-content p { 
             font-size: clamp(1.1rem, 4vw, 1.4rem); margin-bottom: 30px; 
-            animation: popIn 1s var(--ease-elastic) 0.2s backwards;
+            animation: popIn 1.4s var(--ease-elastic) 0.2s backwards;
         }
 
-        /* Updated Button Container */
         .button-container { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; padding: 10px; min-height: 80px; }
         
-        /* UPDATED LILAC BUTTONS (Fixed Width & Centered) */
         .main-btn {
-            /* Fix width to be equal */
-            width: 160px;
-            padding: 12px 0; 
+            width: 160px; padding: 12px 0; 
             display: inline-flex; justify-content: center; align-items: center;
-            
             border-radius: 50px; border: none; font-size: 1.1rem;
             cursor: pointer; font-weight: bold; letter-spacing: 1px;
             background: linear-gradient(135deg, var(--lilac-soft), var(--lilac-deep));
             color: white; 
             box-shadow: 0 10px 25px rgba(142, 68, 173, 0.3);
-            transition: all 0.5s var(--ease-elastic); 
+            /* Super smooth hover transition */
+            transition: all 0.6s var(--ease-lux); 
             transform-origin: center;
+            animation: popIn 1s var(--ease-elastic) 0.4s backwards;
+            will-change: transform, box-shadow;
         }
         .main-btn:hover { 
-            transform: translateY(-5px) scale(1.05); 
-            box-shadow: 0 20px 40px rgba(142, 68, 173, 0.5); 
+            transform: translateY(-5px) scale(1.03); 
+            box-shadow: 0 20px 40px rgba(142, 68, 173, 0.4); 
             background: linear-gradient(135deg, #eaddff, #9b59b6);
         }
-        .main-btn:active { transform: scale(0.95); }
+        .main-btn:active { transform: scale(0.97); }
         
         .secondary { 
             background: var(--danger); color: white; 
             transition: all 0.6s var(--ease-lux); 
         }
 
-        #play-trigger { margin: 20px auto; animation: fadeInUp 1s var(--ease-lux); text-align: center; z-index: 10; flex: 0 0 auto; }
+        #play-trigger { margin: 20px auto; animation: fadeInUp 1.2s var(--ease-lux); text-align: center; z-index: 10; flex: 0 0 auto; }
         .arrow-down { font-size: 1.8rem; color: var(--lilac-deep); margin-bottom: 10px; animation: bounce 2s infinite ease-in-out; }
         
         .pulse-play-btn {
             width: 90px; height: 90px; border-radius: 50%;
             background: white; border: 4px solid var(--lilac-deep);
             color: var(--lilac-deep); font-size: 2.5rem; cursor: pointer;
-            transition: all 0.4s var(--ease-elastic); display: flex; justify-content: center; align-items: center; margin: 0 auto;
+            transition: all 0.6s var(--ease-elastic); display: flex; justify-content: center; align-items: center; margin: 0 auto;
             box-shadow: 0 10px 25px rgba(142, 68, 173, 0.3);
             animation: heartbeat 2s infinite;
         }
@@ -179,6 +233,7 @@
         .candle-wrapper { 
             position: relative; z-index: 10; text-align: center; margin: auto 0; flex: 0 0 auto; 
             animation: softFloat 5s infinite ease-in-out;
+            will-change: transform;
         }
         
         .candle {
@@ -186,11 +241,12 @@
             background: linear-gradient(to right, #e0c3fc, #cbb2e5);
             margin: 0 auto 30px auto; border-radius: 12px;
             box-shadow: 0 0 50px rgba(224, 195, 252, 0.8);
-            position: relative; transition: box-shadow 0.4s var(--ease-lux);
+            position: relative; transition: box-shadow 0.6s var(--ease-lux);
         }
         .candle.off { box-shadow: none; }
         
         .wick { width: 4px; height: 15px; background: #333; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); border-radius: 2px; z-index: 1; }
+        
         .flame {
             width: 24px; height: 40px; background: linear-gradient(to bottom, #ffeb3b, #ff9800);
             border-radius: 50% 50% 20% 20%; position: absolute; top: -50px; left: 50%; 
@@ -199,7 +255,21 @@
             box-shadow: 0 0 30px 10px rgba(255, 165, 0, 0.6);
             transition: opacity 0.5s, transform 0.5s; transform-origin: bottom center; z-index: 2;
         }
-        .flame.blown-out { opacity: 0; transform: translateX(-50%) scale(0) translateY(-20px); transition: all 0.4s var(--ease-lux); }
+        
+        /* UPDATED: FAINT GREY CORE */
+        .flame::after {
+            content: '';
+            position: absolute;
+            bottom: 2px; left: 50%; transform: translateX(-50%);
+            width: 10px; height: 15px;
+            background: rgba(160, 160, 170, 0.4); /* Faint grey-blue */
+            border-radius: 50% 50% 30% 30%;
+            filter: blur(2px);
+            opacity: 0.8;
+            animation: flicker 0.1s infinite alternate-reverse;
+        }
+        
+        .flame.blown-out { opacity: 0; transform: translateX(-50%) scale(0) translateY(-20px); transition: all 0.6s var(--ease-lux); }
         
         .vapor {
             position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
@@ -224,17 +294,17 @@
         }
         .fog-layer.cleared { opacity: 0; }
 
-        .instruction-text { font-size: 1.2rem; color: var(--text-dark); padding: 0 10px; max-width: 300px; margin: 0 auto; animation: fadeInUp 1s 0.5s backwards; }
+        .instruction-text { font-size: 1.2rem; color: var(--text-dark); padding: 0 10px; max-width: 300px; margin: 0 auto; animation: fadeInUp 1.2s 0.5s backwards var(--ease-lux); }
         
         .small-btn {
             margin-top: 20px; padding: 10px 25px; border-radius: 30px;
             background: white; 
             border: none; 
             color: var(--lilac-deep); font-weight: bold; cursor: pointer; 
-            transition: all 0.4s var(--ease-elastic); font-size: 0.9rem;
+            transition: all 0.5s var(--ease-elastic); font-size: 0.9rem;
             box-shadow: 0 5px 15px rgba(224, 195, 252, 0.8);
         }
-        .small-btn:hover { transform: scale(1.1); box-shadow: 0 10px 25px rgba(224, 195, 252, 0.9); }
+        .small-btn:hover { transform: scale(1.08); box-shadow: 0 10px 25px rgba(224, 195, 252, 0.9); }
 
         /* =========================================
            GALLERY SCENE
@@ -244,7 +314,7 @@
             color: var(--lilac-deep); 
             margin: 0 0 10px 0; 
             text-align: center; flex: 0 0 auto;
-            animation: popIn 1s var(--ease-elastic) backwards;
+            animation: popIn 1.2s var(--ease-elastic) backwards;
         }
         
         .no-interaction { pointer-events: none !important; }
@@ -253,34 +323,42 @@
             display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; 
             max-width: 800px; width: 100%; flex: 0 0 auto; 
             margin-bottom: 5px; 
-            perspective: 1000px;
-            animation: fadeInUp 1s 0.3s backwards var(--ease-lux);
+            perspective: 1000px; 
+            transform-style: preserve-3d;
+            animation: fadeInUp 1.2s 0.3s backwards var(--ease-lux);
+            /* Weighted transition for silky tilt effect */
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+            will-change: transform;
         }
         
         .gallery-item { 
             aspect-ratio: 4/3; width: 100%; border-radius: 12px; overflow: hidden; 
             background: white; padding: 5px; 
             box-shadow: 0 10px 25px rgba(142, 68, 173, 0.25);
-            transition: all 0.8s var(--ease-elastic);
+            transition: all 0.8s var(--ease-elastic), transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
             transform: translate(0, 0); 
             z-index: 1;
+            /* Fix for flickering during 3D transforms */
+            backface-visibility: hidden;
+            will-change: transform;
         }
 
         .gallery-item:nth-child(1), .gallery-item:nth-child(2), .gallery-item:nth-child(3) { grid-column: span 2; }
         .gallery-item:nth-child(4), .gallery-item:nth-child(5) { grid-column: span 3; }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; transition: transform 0.5s var(--ease-lux); }
-        .gallery-item:hover { transform: scale(1.05) translateY(-5px); z-index: 10; box-shadow: 0 20px 40px rgba(142, 68, 173, 0.4); }
-        .gallery-item:hover img { transform: scale(1.1); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; transition: transform 0.6s var(--ease-lux); will-change: transform; }
+        .gallery-item:hover { transform: scale(1.03) translateY(-5px) translateZ(20px); z-index: 10; box-shadow: 0 20px 40px rgba(142, 68, 173, 0.4); }
+        .gallery-item:hover img { transform: scale(1.08); }
 
-        .gallery-grid.stacked .gallery-item { box-shadow: none; cursor: pointer; transition: all 1s var(--ease-elastic); }
+        .gallery-grid.stacked .gallery-item { box-shadow: none; cursor: pointer; transition: all 1.2s var(--ease-elastic); }
         .gallery-grid.stacked .gallery-item:nth-child(2) { 
             transform: translate(0, 50%); z-index: 10; 
             box-shadow: 0 25px 50px rgba(142, 68, 173, 0.5), 0 5px 15px rgba(0,0,0,0.1);
         }
-        .gallery-grid.stacked .gallery-item:nth-child(1) { transform: translate(calc(100% + 12px), 50%) scale(0.95); z-index: 1; }
-        .gallery-grid.stacked .gallery-item:nth-child(3) { transform: translate(calc(-100% - 12px), 50%) scale(0.95); z-index: 1; }
-        .gallery-grid.stacked .gallery-item:nth-child(4) { transform: translate(calc(50% + 6px), -60%) scale(0.66); z-index: 1; }
-        .gallery-grid.stacked .gallery-item:nth-child(5) { transform: translate(calc(-50% - 6px), -60%) scale(0.66); z-index: 1; }
+        .gallery-grid.stacked .gallery-item:nth-child(1) { transform: translate(calc(100% + 12px), 55%) rotate(5deg) scale(0.95); z-index: 1; }
+        .gallery-grid.stacked .gallery-item:nth-child(3) { transform: translate(calc(-100% - 12px), 55%) rotate(-5deg) scale(0.95); z-index: 1; }
+        .gallery-grid.stacked .gallery-item:nth-child(4) { transform: translate(calc(50% + 6px), -55%) rotate(-3deg) scale(0.66); z-index: 1; }
+        .gallery-grid.stacked .gallery-item:nth-child(5) { transform: translate(calc(-50% - 6px), -55%) rotate(3deg) scale(0.66); z-index: 1; }
+        
         .gallery-grid.stacked:hover .gallery-item:nth-child(1) { transform: translate(calc(90% + 12px), 50%) rotate(-8deg); }
         .gallery-grid.stacked:hover .gallery-item:nth-child(3) { transform: translate(calc(-90% - 12px), 50%) rotate(8deg); }
         .gallery-grid.stacked:hover .gallery-item:nth-child(2) { transform: translate(0, 40%) scale(1.05); }
@@ -299,7 +377,8 @@
             box-shadow: 0 10px 20px rgba(142, 68, 173, 0.4);
             flex: 0 0 auto; display: flex; align-items: center; gap: 10px; 
             margin-top: 10px; 
-            transition: all 0.5s var(--ease-elastic);
+            transition: all 0.6s var(--ease-lux);
+            will-change: transform;
         }
         .next-btn:hover { transform: translateX(5px) scale(1.05); background: #9b59b6; }
 
@@ -324,7 +403,7 @@
             justify-content: space-between; 
             box-shadow: 0 20px 60px rgba(142, 68, 173, 0.25);
             margin: 0; 
-            animation: popIn 1s var(--ease-lux) backwards;
+            animation: popIn 1.2s var(--ease-lux) backwards;
             transform-origin: center;
         }
         
@@ -362,7 +441,7 @@
             font-family: var(--font-hand); font-size: 1.8rem; color: var(--lilac-deep); 
             white-space: nowrap; 
             opacity: 0; 
-            transition: opacity 1s var(--ease-lux);
+            transition: opacity 1.5s var(--ease-lux);
         }
         
         .voice-note-container {
@@ -373,7 +452,7 @@
             padding: 10px 10px; 
             min-width: 200px; 
             cursor: default;
-            transition: transform 0.3s var(--ease-elastic);
+            transition: transform 0.4s var(--ease-elastic);
         }
         .voice-note-container:hover { transform: scale(1.02); }
 
@@ -409,7 +488,7 @@
         @keyframes wave { 0%, 100% { transform: scaleY(0.5); } 50% { transform: scaleY(1.4); } }
 
         /* =========================================
-           PUZZLE SCENE (GIFT BOX UPGRADE)
+           PUZZLE SCENE
            ========================================= */
         #scene-puzzle { justify-content: center; }
         .game-container {
@@ -429,7 +508,6 @@
             box-shadow: 0 10px 25px rgba(142, 68, 173, 0.3);
             transition: transform 0.3s var(--ease-elastic);
         }
-        /* Vertical Ribbon on Box */
         .box::before {
             content: ''; position: absolute;
             width: 15px; height: 100%;
@@ -454,7 +532,6 @@
             z-index: 10; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        /* Ribbon on Lid */
         .box-lid::before {
             content: ''; position: absolute;
             width: 15px; height: 100%;
@@ -462,7 +539,6 @@
             left: 50%; transform: translateX(-50%);
             top: 0;
         }
-        /* Small Bow on Lid */
         .box-lid::after {
             content: ''; position: absolute;
             width: 30px; height: 10px;
@@ -475,7 +551,6 @@
         .box.open .box-lid { 
             animation: pop-lid 0.9s forwards cubic-bezier(0.25, 1, 0.5, 1); 
         }
-        /* UPDATED ANIMATION: Lift Up slightly (30px), Angle, Stay On Top (Visible) */
         @keyframes pop-lid {
             0% { transform: translateY(0) rotate(0deg); }
             100% { transform: translateY(-30px) rotate(-15deg); opacity: 1; }
@@ -484,7 +559,7 @@
         .box.shake { animation: shake 0.5s; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
 
-        /* WIN OVERLAY (SMOOTHER) */
+        /* WIN OVERLAY */
         .win-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: var(--bg-color); z-index: 10000; display: flex; flex-direction: column; 
@@ -525,58 +600,52 @@
         
         @keyframes floatCard { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
 
-        /* =========================================
-           UPDATED MODAL CSS (ZOOMED IMAGE CARD - SMOOTHER)
-           ========================================= */
-        /* 1. Modal Container (Background) */
+        /* MODAL CSS */
         .modal { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0, 0, 0, 0.85); /* Slightly darker for focus */
-            backdrop-filter: blur(12px); /* Smoother blur */
+            background: rgba(0, 0, 0, 0.85); 
+            backdrop-filter: blur(12px); 
             z-index: 2000; display: flex; justify-content: center; align-items: center; 
             opacity: 0; pointer-events: none; transition: opacity 0.5s var(--ease-lux); 
+            will-change: opacity;
         }
         .modal:not(.hidden) { opacity: 1; pointer-events: auto; }
         
-        /* 2. Modal Wrapper - Hugs the image size */
         .modal-card {
             position: relative; 
             width: auto; 
             max-width: 90%;
             max-height: 90vh;
-            display: flex; justify-content: center; align-items: center;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
         }
 
-        /* 3. The Image - Applies the ZOOM animation (Super Elastic) */
         .modal-content { 
             max-width: 100%; 
-            max-height: 90vh; 
+            max-height: 80vh; 
             border-radius: 10px; 
             object-fit: contain;
             box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-            /* Start state */
-            transform: scale(0.6) translateY(50px); 
+            transform: scale(0.8) translateY(30px); 
             opacity: 0;
-            /* Ultra smooth elastic zoom */
             transition: transform 0.8s var(--ease-elastic), opacity 0.6s ease;
+            will-change: transform, opacity;
         }
-        /* End State (Zoomed in) */
         .modal:not(.hidden) .modal-content {
             transform: scale(1) translateY(0); opacity: 1;
         }
         
-        /* 4. The Close Button - OUTSIDE & BESIDE (With Animation) */
+        /* UPDATED: CLOSE BUTTON POSITIONING (Beside Picture) */
         .close-modal { 
             position: absolute; 
-            top: 0; 
-            right: -70px; 
+            top: 0;
+            right: -60px; /* Positioned beside the image */
             font-size: 3.5rem; 
             color: white; 
             padding: 0;
             line-height: 1;
             cursor: pointer;
             z-index: 2001;
-            /* Animation: Spin and Pop In */
             animation: rotateIn 0.8s var(--ease-elastic) backwards 0.3s;
             transition: all 0.3s var(--ease-lux);
         }
@@ -586,29 +655,29 @@
             100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
         
-        /* Hover effect: Glow and Rotate (NO OVAL BACKGROUND) */
         .close-modal:hover {
             transform: scale(1.2) rotate(90deg);
             color: var(--lilac-soft);
             text-shadow: 0 0 20px rgba(255,255,255,0.9);
-            /* Removed background and border-radius as requested */
         }
 
-        /* Responsive */
+        /* Responsive adjustment for close button */
         @media (max-width: 600px) {
             .close-modal {
+                /* On small screens, keep it top-right to avoid being off-screen */
                 right: 0;
-                top: -60px;
+                top: -50px;
             }
         }
 
-        /* FINALE SCENE (SMOOTHER) */
+        /* FINALE SCENE */
         #scene-finale { justify-content: center; }
         .glass-card { 
             background: var(--glass); backdrop-filter: blur(25px); border-radius: 20px; 
             padding: 30px; max-width: 600px; width: 100%; margin: auto 0; flex: 0 0 auto; text-align: center; 
             box-shadow: 0 20px 60px rgba(142, 68, 173, 0.25);
-            animation: popIn 1s var(--ease-elastic) backwards;
+            animation: popIn 1.2s var(--ease-elastic) backwards;
+            position: relative; z-index: 2; /* above particles */
         }
         .countdown-wrapper { display: flex; gap: 10px; justify-content: center; margin: 30px 0; flex-wrap: wrap; }
         .time-block { 
@@ -818,10 +887,32 @@
             </div>
             <p style="color: #777; font-style: italic; margin-top: 15px;">Until December 25th, 2025</p>
         </div>
-    </section>
+        </section>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <script>
+        // FIREFLIES LOGIC
+        function createFireflies() {
+            for(let i=0; i<15; i++) {
+                let f = document.createElement('div');
+                f.className = 'firefly';
+                let x = (Math.random() - 0.5) * window.innerWidth * 1.5 + 'px';
+                let y = (Math.random() - 0.5) * window.innerHeight * 1.5 + 'px';
+                f.style.setProperty('--x', x);
+                f.style.setProperty('--y', y);
+                f.style.animationDelay = Math.random() * 5 + 's';
+                document.body.appendChild(f);
+            }
+        }
+        createFireflies();
+
+        // HAPTIC FEEDBACK HELPER
+        function pulsePhone(pattern = 200) {
+            if (navigator.vibrate) {
+                navigator.vibrate(pattern);
+            }
+        }
+
         const cursorTrail = document.getElementById('cursor-trail');
         document.addEventListener('mousemove', (e) => {
             cursorTrail.style.left = e.clientX + 'px';
@@ -833,37 +924,28 @@
         const voiceNote = document.getElementById('voice-note');
         const waveformBars = document.querySelectorAll('.waveform-bar');
 
-        // VOLUME SETTINGS
-        const HIGH_VOL = 0.5; // "Original" volume
-        const LOW_VOL = 0.1;  // Quiet volume when voice note plays
+        const HIGH_VOL = 0.5;
+        const LOW_VOL = 0.1;
         
-        // Initialize volume
         bgMusic.volume = HIGH_VOL; 
         voiceNote.volume = 1.0;
 
-        // Helper function to fade music smoothly
         function fadeMusic(targetVolume) {
-            const step = 0.02; // How much to change per tick
-            const intervalTime = 50; // How fast the ticks are
-            
-            // Clear any existing fade to prevent conflicts
+            const step = 0.02;
+            const intervalTime = 50;
             if (bgMusic.fadeInterval) clearInterval(bgMusic.fadeInterval);
 
             bgMusic.fadeInterval = setInterval(() => {
                 let current = bgMusic.volume;
-                
-                // If we are close enough, set exact volume and stop
                 if (Math.abs(current - targetVolume) < step) {
                     bgMusic.volume = targetVolume;
                     clearInterval(bgMusic.fadeInterval);
                     return;
                 }
-
-                // Fade Up or Down
                 if (current > targetVolume) {
-                    bgMusic.volume = Math.max(0, current - step); // Go down
+                    bgMusic.volume = Math.max(0, current - step);
                 } else {
-                    bgMusic.volume = Math.min(1, current + step); // Go up
+                    bgMusic.volume = Math.min(1, current + step);
                 }
             }, intervalTime);
         }
@@ -872,7 +954,8 @@
             const currentScene = document.querySelector('.scene.active');
             const nextScene = document.getElementById(sceneId);
             
-            // GALLERY DELAY LOGIC
+            pulsePhone(50); // Little haptic bump on transitions
+
             if (sceneId === 'scene-gallery') {
                 nextScene.classList.add('no-interaction');
                 setTimeout(() => {
@@ -880,7 +963,6 @@
                 }, 2000);
             }
 
-            // HANDLE SCENE TRANSITION
             if (currentScene) currentScene.classList.remove('active');
             if (nextScene) {
                 nextScene.classList.remove('hidden');
@@ -888,41 +970,33 @@
                 setTimeout(() => nextScene.classList.add('active'), 50);
             }
             
-            if (sceneId === 'scene-finale') startCountdown();
+            // NEW FEATURE: FINALE PARTICLES TRIGGER
+            if (sceneId === 'scene-finale') {
+                startCountdown();
+                createFinaleParticles();
+            }
             
-            // --- LETTER SCENE LOGIC (Music Down, Voice Start) ---
             if (sceneId === 'scene-letter') {
-                // Fade music DOWN
                 fadeMusic(LOW_VOL);
-                
-                // Play Voice Note
                 voiceNote.currentTime = 0;
                 voiceNote.play();
                 waveformBars.forEach(bar => bar.classList.add('playing'));
-                
                 setTimeout(typeWriter, 800);
             }
             
-            // --- PUZZLE SCENE LOGIC (Leaving Letter -> Stop Voice, Music Up) ---
             if (sceneId === 'scene-puzzle') {
-                // 1. STOP Voice Note immediately
                 voiceNote.pause();
                 voiceNote.currentTime = 0; 
                 waveformBars.forEach(bar => bar.classList.remove('playing'));
-
-                // 2. Fade music back UP to original level
                 fadeMusic(HIGH_VOL);
-
                 setTimeout(startGame, 1000);
             }
         }
         
-        // WAVEFORM ENDS WHEN AUDIO ENDS NATURALLY
         voiceNote.addEventListener('ended', () => {
             waveformBars.forEach(bar => bar.classList.remove('playing'));
         });
 
-        // YES/NO Logic
         const btnYes = document.getElementById('btn-yes');
         const btnNo = document.getElementById('btn-no');
         const playTrigger = document.getElementById('play-trigger');
@@ -930,6 +1004,7 @@
         let noClickCount = 0;
 
         btnYes.addEventListener('click', () => {
+            pulsePhone(50); // Haptic
             document.querySelector('.landing-content').style.display = 'none';
             playTrigger.classList.remove('hidden');
         });
@@ -948,6 +1023,7 @@
                 btnNo.removeEventListener('mouseover', runAway);
                 btnNo.removeEventListener('touchstart', runAway);
                 btnNo.onclick = () => {
+                    pulsePhone(50);
                     document.querySelector('.landing-content').style.display = 'none';
                     playTrigger.classList.remove('hidden');
                     btnNo.style.display = 'none';
@@ -959,29 +1035,27 @@
         startBtn.addEventListener('click', () => nextScene('scene-candle'));
 
         // ==============================================
-        //  BLOW DETECTION LOGIC (SENSITIVITY 28)
+        //  BLOW DETECTION LOGIC (MANUAL BLOW REMOVED)
         // ==============================================
         const enableMicBtn = document.getElementById('enable-mic-btn');
         const flame = document.getElementById('flame');
         const candleBody = document.getElementById('candle-body');
         const micInstruction = document.getElementById('mic-instruction');
+        const candleWrapper = document.querySelector('.candle-wrapper');
         
         let audioContext, analyser, microphone, dataArray, bufferLength;
         let listening = false;
         
-        // BLOW DETECTION CONFIGURATION (KEPT AT 28)
         const BLOW_THRESHOLD = 27; 
         const LOW_FREQ_START = 0;
         const LOW_FREQ_END = 200;
         const BLOW_DURATION_REQUIRED = 3; 
-
-        // State variables
         let blowDetected = false;
         let blowDuration = 0;
 
         enableMicBtn.addEventListener('click', async () => {
+            pulsePhone(50);
             try {
-                // Audio setup with echo cancellation and noise suppression
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     audio: {
                         echoCancellation: true,
@@ -995,7 +1069,6 @@
                 microphone = audioContext.createMediaStreamSource(stream);
                 microphone.connect(analyser);
                 
-                // Important: FFT size set to 256 as per new logic
                 analyser.fftSize = 256;
                 bufferLength = analyser.frequencyBinCount;
                 dataArray = new Uint8Array(bufferLength);
@@ -1004,22 +1077,22 @@
                 micInstruction.innerHTML = '<strong>NOW BLOW!</strong> 🌬️';
                 listening = true;
                 
-                analyzeAudio(); // Start the new analysis loop
+                analyzeAudio(); 
             } catch (err) { 
                 console.error(err);
                 alert('Mic access needed! Check permissions.'); 
             }
         });
 
+        // REMOVED MANUAL EVENT LISTENERS HERE (Keydown/Mousedown)
+
         function analyzeAudio() {
             if (!listening) return;
             
             analyser.getByteFrequencyData(dataArray);
-            
             const sampleRate = audioContext.sampleRate;
             const binSize = sampleRate / analyser.fftSize;
             
-            // 1. Focus on LOW frequencies (where blowing sound is strongest)
             let lowFreqSum = 0;
             let lowFreqCount = 0;
             
@@ -1032,23 +1105,17 @@
             }
             const lowFreqAvg = lowFreqCount > 0 ? lowFreqSum / lowFreqCount : 0;
             
-            // 2. Calculate overall volume
             let totalSum = 0;
             for (let i = 0; i < bufferLength; i++) {
                 totalSum += dataArray[i];
             }
             const overallAvg = totalSum / bufferLength;
-            
-            // 3. Threshold check
             const actualThreshold = (BLOW_THRESHOLD / 100) * 180 + 20;
             
-            // 4. BLOW DETECTION ALGORITHM
             if (lowFreqAvg > actualThreshold && overallAvg > actualThreshold * 0.8) {
                 blowDuration++;
-                
                 if (blowDuration > BLOW_DURATION_REQUIRED && !blowDetected) {
                     blowDetected = true;
-                    // TRIGGER SUCCESS - USING ORIGINAL ANIMATIONS
                     triggerFlameOut();
                 }
             } else {
@@ -1057,14 +1124,13 @@
                     blowDetected = false;
                 }
             }
-            
             requestAnimationFrame(analyzeAudio);
         }
 
         function triggerFlameOut() {
-            listening = false; // Stop listening
+            listening = false;
+            pulsePhone([100, 50, 100]); // SUCCESS HAPTIC
             
-            // ORIGINAL VISUALS FOR FLAME OUT
             flame.classList.add('blown-out');
             candleBody.classList.add('off');
             document.querySelector('.vapor').classList.add('rise');
@@ -1072,7 +1138,6 @@
             micInstruction.textContent = '🎉 Yay!';
             bgMusic.play().catch(e=>{});
 
-            // Move visual cursor away to clear center (Logic Preserved)
             if(cursorTrail) {
                 cursorTrail.style.left = '0px';
                 cursorTrail.style.top = '0px';
@@ -1080,27 +1145,44 @@
             
             setTimeout(() => {
                 document.querySelector('.fog-layer').classList.add('cleared');
+                
+                // REVERTED CONFETTI (BACK TO ORIGINAL SQUARES)
                 confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+
                 setTimeout(() => nextScene('scene-gallery'), 2000);
             }, 1000);
         }
-        // ==============================================
-        //  END OF BLOW LOGIC
-        // ==============================================
 
-        // GALLERY STACK LOGIC
+        // GALLERY STACK & PARALLAX LOGIC
         const galleryGrid = document.getElementById('gallery-grid');
         galleryGrid.addEventListener('click', expandGallery);
         galleryGrid.addEventListener('mouseover', expandGallery);
         
+        // NEW FEATURE: GALLERY 3D TILT PARALLAX
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        
+        if (!isMobile) {
+            // Desktop Hover Physics
+            document.addEventListener('mousemove', (e) => {
+                if (!galleryGrid.classList.contains('stacked') && document.getElementById('scene-gallery').classList.contains('active')) {
+                    const x = (window.innerWidth / 2 - e.pageX) / 50;
+                    const y = (window.innerHeight / 2 - e.pageY) / 50;
+                    galleryGrid.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+                }
+            });
+        }
+        
         function expandGallery() {
             if (galleryGrid.classList.contains('stacked')) {
+                pulsePhone(50);
                 galleryGrid.classList.remove('stacked');
                 document.querySelector('.hint-text').style.opacity = '0';
             }
         }
 
+        // MODAL LOGIC (CAPTIONS REMOVED)
         function openModal(src) {
+            pulsePhone(30);
             document.getElementById('image-modal').classList.remove('hidden');
             document.getElementById('modal-img').src = src;
         }
@@ -1193,12 +1275,14 @@
 
         function checkBox(index) {
             const boxDiv = boxWrappers[index].querySelector('.box');
+            pulsePhone(50); 
             if (index === 1) { // CORRECT
                 gameActive = false;
                 boxDiv.classList.add('shake-hard');
                 setTimeout(() => {
                     boxDiv.classList.remove('shake-hard');
                     boxDiv.classList.add('open');
+                    pulsePhone([100, 200, 100]); // WIN HAPTIC
                     setTimeout(() => {
                         document.getElementById('win-overlay').classList.add('active');
                         document.getElementById('game-status').style.display = 'none';
@@ -1213,7 +1297,6 @@
             }
         }
         
-        // WIN MESSAGE TYPEWRITER
         const winMsg = "I prepared a handwritten letter and a small gift for you when you get back from Greece on the 25th!";
         let winIndex = 0;
         function typeWriterWin() {
@@ -1226,11 +1309,11 @@
         }
         
         function closeWinAndNext() {
+            pulsePhone(50);
             document.getElementById('win-overlay').classList.remove('active');
             nextScene('scene-finale');
         }
 
-        // COUNTDOWN<
         function startCountdown() {
             const target = new Date('December 25, 2025 00:00:00').getTime();
             setInterval(() => {
@@ -1242,6 +1325,23 @@
                 document.getElementById('mins').textContent = String(Math.floor((dist % 3600000) / 60000)).padStart(2,'0');
                 document.getElementById('secs').textContent = String(Math.floor((dist % 60000) / 1000)).padStart(2,'0');
             }, 1000);
+        }
+
+        // NEW FEATURE: FINALE PARTICLES CREATION
+        function createFinaleParticles() {
+            const scene = document.getElementById('scene-finale');
+            for(let i=0; i<30; i++) {
+                const p = document.createElement('div');
+                p.classList.add('finale-particle');
+                const size = Math.random() * 20 + 5;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.bottom = '-20px';
+                p.style.animationDelay = Math.random() * 2 + 's';
+                p.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                scene.appendChild(p);
+            }
         }
     </script>
 </body>
